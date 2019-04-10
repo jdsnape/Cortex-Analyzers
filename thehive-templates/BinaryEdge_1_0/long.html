@@ -1,0 +1,131 @@
+Q<div class="panel panel-info" ng-if="success">
+	<div class="panel-heading">
+		BinaryEdge lookup for <strong>{{(artifact.data || artifact.attachment.name) | fang}}</strong>
+	</div>
+	<div class="panel-body" ng-if="content.total==0">
+	No results found.
+	</div>
+	
+	<div class="panel-body" ng-if="content.total>0">
+	<h4>Banner grab:</h4>
+    <table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Port</th>
+            <th>Category</th>
+            <th>OS</th>
+            <th>Product</th>
+            <th>State</th>
+            <th>Data</th>
+            <th>Tags</th>
+        </tr>
+    </thead>
+    <tbody ng-repeat="event in content.events">
+        <tr ng-repeat="result in event.results" ng-if="result.result.data.service">
+            <td>{{event.port}}/{{result.target.protocol}}</td>
+            <td>{{result.result.data.service.name}}</td>
+            
+            <td>{{result.result.data.service.ostype}}</td>
+            
+            <td ng-if="result.result.data.service.version">{{result.result.data.service.product}} ({{result.result.data.service.version}})</td>
+            <td ng-if="!result.result.data.service.version">
+		{{result.result.data.service.product}}
+	    </td>
+            
+            
+            <td>{{result.result.data.state.state}}</td>
+            <td ng-if="result.result.data.service.banner.length>150">
+                <span>
+                    {{result.result.data.service.banner.substring(0,150)}}
+                </span>
+                <span ng-show="showBanner">
+                    {{result.result.data.service.banner.substring(150)}}
+                </span>
+                <i ng-class="showBanner ? 'fa fa-caret-left' : 'fa fa-caret-right'" ng-click="showBanner = ! showBanner" style="padding-left: 5px;">
+            </td>
+                <td ng-if="result.result.data.service.banner.length<150">
+                    {{result.result.data.service.banner}}
+    
+            </td>
+            <td ng-if="!result.result.data.service.banner"></td>
+            
+            <td><span class="label label-info">{{result.result.data.service.extrainfo}}</span>
+	    
+	    
+            
+                <div ng-repeat="sub_result in event.results" ng-if="sub_result.result.data.vulnerabilities || sub_result.result.data.cert_info || sub_result.result.data.ciphers">
+                <span ng-if="sub_result.result.data.vulnerabilities.is_vulnerable_to_ccs_injection==true" class="label label-danger">OpenSSL CCS injection</span>
+                <span ng-if="sub_result.result.data.vulnerabilities.is_vulnerable_to_ccs_heartbleed==true" class="label label-danger">Heartbleed</span>
+                <span ng-if="sub_result.result.data.ciphers.sslv2.accepted_cipher_list.length" class="label label-danger">SSLv2</span>
+                <span ng-if="sub_result.result.data.ciphers.sslv3.accepted_cipher_list.length" class="label label-danger">SSLv3</span>
+                <span ng-if="sub_result.result.data.ciphers.tlsv1.accepted_cipher_list.length" class="label label-danger">TLSv1</span>
+                <span ng-if="sub_result.result.data.ciphers.tlsv1_1.accepted_cipher_list.length" class="label label-warning">TLSv1.1</span>
+                <span ng-if="sub_result.result.data.ciphers.tlsv1_2.accepted_cipher_list.length" class="label label-info">TLSv1.2</span>
+                <span ng-if="sub_result.result.data.ciphers.tlsv1_3.accepted_cipher_list.length" class="label label-info">TLSv1.3</span>
+                <span ng-repeat="truststore in sub_result.result.data.truststores" ng-if="truststore.trust_store.name=='Mozilla' && truststore.is_certificate_trusted==true" class="label label-info">Trusted</span>
+                <span ng-repeat="truststore in sub_result.result.data.truststores" ng-if="truststore.trust_store.name=='Mozilla' && truststore.is_certificate_trusted==false" class="label label-danger">Not Trusted</span>
+                <span  ng-if="sub_result.result.data.cert_info.error_message" class="label label-danger">Not Trusted - cert error</span>
+                </div>
+
+	    
+	    </td>
+        </tr>
+    
+    </tbody>
+    </table>
+
+    <h4 ng-if="content.web_request==true" >Web-requests:</h4>
+<table ng-if="content.web_request==true" class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Port</th>
+            <th>Status</th>
+            <th>URL</th>
+            <th>Headers</th>
+            <th style="width: 30%">Body</th>
+        </tr>
+    </thead>
+    <tbody ng-repeat="event in content.events">
+        <tr ng-repeat="result in event.results" ng-if="result.result.data.response">
+            <td>{{event.port}}/{{result.target.protocol}}</td>
+            <td>{{result.result.data.response.statusCode}}</td>
+            
+            <td>{{result.result.data.response.href}}</td>
+
+            <td>
+            <ul style="list-style: none; padding-left: 0px;">
+            <li ng-repeat="(key,value) in result.result.data.response.headers"><strong>{{key}}:</strong> {{value}}</li>
+            </ul>
+            </td>
+              <td ng-if="result.result.data.response.body.length>150">
+                <span>
+                    {{result.result.data.response.body.substring(0,150)}}
+                </span>
+                <span ng-show="showBanner">
+                    {{result.result.data.response.body.substring(150)}}
+                </span>
+                <i ng-class="showBanner ? 'fa fa-caret-left' : 'fa fa-caret-right'" ng-click="showBanner = ! showBanner" style="padding-left: 5px;">
+            </td>
+                <td ng-if="result.result.data.response.body.length<150">
+                    {{result.result.data.response.body}}
+    
+            </td>
+            <td ng-if="!result.result.data.response.body"></td>
+
+        </tr>
+    
+    </tbody>
+    </table>
+	</div>
+	
+</div>
+
+<div class="panel panel-danger" ng-if="!success">
+	<div class="panel-heading">
+		    <strong>{{(artifact.data || artifact.attachment.name) | fang}}</strong>
+	</div>
+	<div class="panel-body">
+		{{content.errorMessage}}
+	</div>
+</div>
+
